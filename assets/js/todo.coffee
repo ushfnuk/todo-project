@@ -36,11 +36,14 @@ class TodoApp
     return unless e.which == 13 and val
     
     randomId = Math.floor Math.random() * 999999
-    
-    localStorage.setObj randomId, 
+
+    newItem = 
       id: randomId
       title: val
       completed: false
+    
+    localStorage.setObj randomId, newItem
+    @socket.emit 'newItem', newItem if @socket
     @$input.val ''
     @displayItems()
   
@@ -56,8 +59,8 @@ class TodoApp
       <li #{if item.completed then 'class="completed"' else ''}
 data-id = "#{item.id}">
         <div class="view">
-          <input class="toggle" type="checkbox" #{if item.completed 
-then 'checked' else ''}>
+          <input class="toggle" type="checkbox"
+#{if item.completed then 'checked' else ''}>
           <label>#{item.title}</label>
           <button class="destroy"></button>
         </div>
@@ -68,6 +71,7 @@ then 'checked' else ''}>
   destroy: (elem) ->
     id = $(elem).closest('li').data('id')
     localStorage.removeItem id
+    @socket.emit 'removeItem', id if @socket
     @displayItems()
   
   toggle: (elem) ->
@@ -75,21 +79,41 @@ then 'checked' else ''}>
     item = localStorage.getObj id
     item.completed = !item.completed
     localStorage.setObj id, item
+    @socket.emit 'toggleItem', item if @socket
   
   clearCompleted: ->
-    localStorage.removeItem id for id in Object.keys(localStorage)\
-      when (localStorage.getObj id).completed
+    for id in Object.keys(localStorage) when (localStorage.getObj id).completed
+      localStorage.removeItem id
+      @socket.emit 'removeItem', id if @socket
     @displayItems()
   
   joinList: ->
-    @socket = io.connect 'http://todo.ushfnuk.c9.io/'
-    
+    if @socket
+      @socketConnect()
+      @setCurrentList()
+      return
+
+    @socketConnect()
+
     @socket.on 'connect', =>
-      @currentList = @$joinListName.val()
-      @socket.emit 'joinList', @currentList
-    
-    @socket.on 'syncItems', (items) =>
-      @syncItems items
+      @setCurrentList()
+
+      @socket.on 'syncItems', (items) => @syncItems items
+
+      @socket.on 'itemAdded', (item) =>
+        localStorage.setObj item.id, item
+        @displayItems()
+
+      @socket.on 'itemRemoved', (id) =>
+        localStorage.removeItem id
+        @displayItems()
+
+  socketConnect: ->
+    @socket = io.connect 'http://localhost:3000/'
+
+  setCurrentList: ->
+    @currentList = @$joinListName.val()
+    @socket.emit 'joinList', @currentList
   
   syncItems: (items) ->
     console.log 'sync items'
@@ -104,7 +128,8 @@ then 'checked' else ''}>
     @$connect.addClass 'hidden'
   
   leaveList: ->
-    @socket.disconnect() if @socket
+    @socket.emit 'leaveList' if @socket
+
     @displayDisconnected()
   
   displayDisconnected: ->
@@ -112,4 +137,4 @@ then 'checked' else ''}>
     @$connect.removeClass 'hidden'
 
 $ ->
-  app = new TodoApp()
+  new TodoApp()

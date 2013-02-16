@@ -27,9 +27,9 @@ class TodoApp
     @$input.on 'keyup', (e) => @create e
     @$todoList.on 'click', '.destroy', (e) => @destroy e.target
     @$todoList.on 'change', '.toggle', (e) => @toggle e.target
-    @$clearCompleted.on 'click', (e) => @clearCompleted()
-    @$join.on 'click', (e) => @joinList()
-    @$leave.on 'click', (e) => @leaveList()
+    @$clearCompleted.on 'click', => @clearCompleted()
+    @$join.on 'click', => @joinList()
+    @$leave.on 'click', => @leaveList()
 
   create: (e) ->
     val = $.trim @$input.val()

@@ -113,7 +113,7 @@ data-id = "#{item.id}">
 
   setCurrentList: ->
     @currentList = @$joinListName.val()
-    @socket.emit 'joinList', @currentList
+    @socket.emit 'joinList', @currentList if @socket
   
   syncItems: (items) ->
     console.log 'sync items'

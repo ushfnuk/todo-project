@@ -109,7 +109,7 @@ data-id = "#{item.id}">
         @displayItems()
 
   socketConnect: ->
-    @socket = io.connect 'http://localhost:3000/'
+    @socket = io.connect "http://todo.ushfnuk.c9.io/"
 
   setCurrentList: ->
     @currentList = @$joinListName.val()

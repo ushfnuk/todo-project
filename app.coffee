@@ -13,7 +13,7 @@ app.use require('connect-assets')()
 app.get "/", (req, res) ->
   res.render 'index'
 
-port = 3000
+port = process.env.PORT
 
 todos = {}
 io.sockets.on 'connection', (socket) ->
